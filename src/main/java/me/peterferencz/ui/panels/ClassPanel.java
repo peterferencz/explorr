@@ -1,0 +1,130 @@
+package me.peterferencz.ui.panels;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.util.ArrayList;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
+
+import org.objectweb.asm.Opcodes;
+
+import me.peterferencz.app.jar.ClassData;
+
+public class ClassPanel extends JPanel {
+
+    public ClassPanel(ClassData classData) {
+        setLayout(new BorderLayout(10, 10));
+        setBorder(new EmptyBorder(15, 15, 15, 15));
+
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+
+        JLabel classNameLabel = new JLabel(classData.getClassName());
+        classNameLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        classNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        headerPanel.add(classNameLabel);
+        headerPanel.add(Box.createVerticalStrut(5));
+
+        // Access
+        JLabel modifiersLabel = new JLabel(accessToString(classData.getAccess()));
+        modifiersLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        modifiersLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        headerPanel.add(modifiersLabel);
+
+        // Super
+        if (classData.getSuperClass() != null) {
+            JLabel superLabel = new JLabel("Extends: " + classData.getSuperClass());
+            superLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            superLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            headerPanel.add(superLabel);
+        }
+
+        // Interfaces
+        ArrayList<String> interfaces = classData.getInterfaces();
+        if (interfaces != null && !interfaces.isEmpty()) {
+            JLabel ifaceLabel = new JLabel("Implements:");
+            ifaceLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            ifaceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            headerPanel.add(ifaceLabel);
+
+            for (String iface : interfaces) {
+                JLabel iLabel = new JLabel("  • " + iface);
+                iLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+                iLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                headerPanel.add(iLabel);
+            }
+        }
+
+        add(headerPanel, BorderLayout.NORTH);
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+
+        String[][] propData = {
+                {"Class Name", classData.getClassName()},
+                {"Class Path", classData.getClassPath()},
+                {"Modifiers", accessToString(classData.getAccess())},
+                {"Superclass", classData.getSuperClass() != null ? classData.getSuperClass() : "-"},
+                {"Interfaces", interfaces != null ? String.join(", ", interfaces) : "-"}
+        };
+        JTable propTable = new JTable(new DefaultTableModel(propData, new String[]{"Property", "Value"}) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        });
+        styleTable(propTable);
+        tabbedPane.addTab("Properties", new JScrollPane(propTable));
+
+        String[] fieldCols = {"Name", "Descriptor", "Signature"};
+        Object[][] fieldRows = classData.getFields().stream()
+                .map(f -> new Object[]{f.getName(), f.getDescriptor(), f.getSignature()})
+                .toArray(Object[][]::new);
+        JTable fieldTable = new JTable(new DefaultTableModel(fieldRows, fieldCols) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        });
+        styleTable(fieldTable);
+        tabbedPane.addTab("Fields", new JScrollPane(fieldTable));
+
+        String[] methodCols = {"Name", "Descriptor", "Signature"};
+        Object[][] methodRows = classData.getMethods().stream()
+                .map(m -> new Object[]{m.getName(), m.getDescriptor(), m.getSignature()})
+                .toArray(Object[][]::new);
+        JTable methodTable = new JTable(new DefaultTableModel(methodRows, methodCols) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        });
+        styleTable(methodTable);
+        tabbedPane.addTab("Methods", new JScrollPane(methodTable));
+
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    private void styleTable(JTable table) {
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(22);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.setGridColor(new Color(220, 220, 220));
+    }
+
+    private String accessToString(int access) {
+        StringBuilder sb = new StringBuilder();
+        if ((access & Opcodes.ACC_PUBLIC) != 0) sb.append("public ");
+        if ((access & Opcodes.ACC_PRIVATE) != 0) sb.append("private ");
+        if ((access & Opcodes.ACC_PROTECTED) != 0) sb.append("protected ");
+        if ((access & Opcodes.ACC_ABSTRACT) != 0) sb.append("abstract ");
+        if ((access & Opcodes.ACC_FINAL) != 0) sb.append("final ");
+        if ((access & Opcodes.ACC_STATIC) != 0) sb.append("static ");
+        if ((access & Opcodes.ACC_INTERFACE) != 0) sb.append("interface ");
+        if(sb.toString().equals("")) return "None";
+        return sb.toString().trim();
+    }
+}
