@@ -16,13 +16,21 @@ import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
-import org.objectweb.asm.Opcodes;
-
 import me.peterferencz.app.jar.ClassData;
+import me.peterferencz.app.jar.Prettier;
 
 public class ClassPanel extends JPanel {
 
+    private ClassData classData;
+
+    public ClassData getClassData(){
+        return classData;
+    }
+
+
     public ClassPanel(ClassData classData) {
+        this.classData = classData;
+
         setLayout(new BorderLayout(10, 10));
         setBorder(new EmptyBorder(15, 15, 15, 15));
 
@@ -35,12 +43,6 @@ public class ClassPanel extends JPanel {
 
         headerPanel.add(classNameLabel);
         headerPanel.add(Box.createVerticalStrut(5));
-
-        // Access
-        JLabel modifiersLabel = new JLabel(accessToString(classData.getAccess()));
-        modifiersLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        modifiersLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        headerPanel.add(modifiersLabel);
 
         // Super
         if (classData.getSuperClass() != null) {
@@ -73,7 +75,7 @@ public class ClassPanel extends JPanel {
         String[][] propData = {
                 {"Class Name", classData.getClassName()},
                 {"Class Path", classData.getClassPath()},
-                {"Modifiers", accessToString(classData.getAccess())},
+                {"Modifiers", Prettier.prettyAccess(classData.getAccess())},
                 {"Superclass", classData.getSuperClass() != null ? classData.getSuperClass() : "-"},
                 {"Interfaces", interfaces != null ? String.join(", ", interfaces) : "-"}
         };
@@ -83,20 +85,28 @@ public class ClassPanel extends JPanel {
         styleTable(propTable);
         tabbedPane.addTab("Properties", new JScrollPane(propTable));
 
-        String[] fieldCols = {"Name", "Descriptor", "Signature"};
+        String[] fieldCols = {"Name", "Access", "Descriptor", "Signature"};
         Object[][] fieldRows = classData.getFields().stream()
-                .map(f -> new Object[]{f.getName(), f.getDescriptor(), f.getSignature()})
-                .toArray(Object[][]::new);
+                .map(f -> new Object[]{
+                    f.getName(),
+                    Prettier.prettyAccess(f.getAccess()),
+                    Prettier.prettyDescriptor(f.getDescriptor()),
+                    Prettier.prettySignature(f.getSignature())
+                }).toArray(Object[][]::new);
         JTable fieldTable = new JTable(new DefaultTableModel(fieldRows, fieldCols) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         });
         styleTable(fieldTable);
         tabbedPane.addTab("Fields", new JScrollPane(fieldTable));
 
-        String[] methodCols = {"Name", "Descriptor", "Signature"};
+        String[] methodCols = {"Name", "Access", "Descriptor", "Signature"};
         Object[][] methodRows = classData.getMethods().stream()
-                .map(m -> new Object[]{m.getName(), m.getDescriptor(), m.getSignature()})
-                .toArray(Object[][]::new);
+                .map(m -> new Object[]{
+                    m.getName(),
+                    Prettier.prettyAccess(m.getAccess()),
+                    Prettier.prettyDescriptor(m.getDescriptor()),
+                    Prettier.prettySignature(m.getSignature())
+                }).toArray(Object[][]::new);
         JTable methodTable = new JTable(new DefaultTableModel(methodRows, methodCols) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         });
@@ -115,16 +125,10 @@ public class ClassPanel extends JPanel {
         table.setGridColor(new Color(220, 220, 220));
     }
 
-    private String accessToString(int access) {
-        StringBuilder sb = new StringBuilder();
-        if ((access & Opcodes.ACC_PUBLIC) != 0) sb.append("public ");
-        if ((access & Opcodes.ACC_PRIVATE) != 0) sb.append("private ");
-        if ((access & Opcodes.ACC_PROTECTED) != 0) sb.append("protected ");
-        if ((access & Opcodes.ACC_ABSTRACT) != 0) sb.append("abstract ");
-        if ((access & Opcodes.ACC_FINAL) != 0) sb.append("final ");
-        if ((access & Opcodes.ACC_STATIC) != 0) sb.append("static ");
-        if ((access & Opcodes.ACC_INTERFACE) != 0) sb.append("interface ");
-        if(sb.toString().equals("")) return "None";
-        return sb.toString().trim();
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ClassPanel)) return false;
+        ClassPanel other = (ClassPanel) obj;
+        return classData.equals(other.getClassData());
     }
 }

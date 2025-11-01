@@ -12,6 +12,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import me.peterferencz.app.jar.JarFileHandler;
 import me.peterferencz.ui.Display;
 
 public class Main {
@@ -21,10 +22,13 @@ public class Main {
     public static Context getGlobalContext() { return globalContext; }
 
     public static void main(String[] args) {
+        new Display();
+
+        JarFileHandler.subscribeToEvents();
+
         Options options = new Options(){{
             addOption("h", "help", false, "Display available flags");
             addOption("i", "input", true, "Specify the input jar file");
-            addOption("d", "disable-gtk-theme", false, "Disables GTK theming");
         }};
 
         CommandLineParser parser = new DefaultParser();
@@ -46,15 +50,10 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-
-            
-            globalContext.displayGTKTheme = !cmd.hasOption("d");
             
 
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
-        new Display();
     }
 }

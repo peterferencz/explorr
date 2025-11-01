@@ -2,6 +2,8 @@ package me.peterferencz.app.jar;
 
 import java.util.ArrayList;
 
+import org.objectweb.asm.Opcodes;
+
 public class ClassData {
     private String classPath;
     private String className;
@@ -42,5 +44,24 @@ public class ClassData {
         this.interfaces = interfaces;
         this.superClass = superClass;
         this.access = access;
+    }
+
+    public boolean isInterface(){
+        return (access & Opcodes.ACC_INTERFACE) != 0;
+    }
+
+    public boolean isClass(){
+        return (!isInterface() && !isEnum());
+    }
+
+    public boolean isEnum(){
+        return (access & Opcodes.ACC_ENUM) != 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ClassData)) return false;
+        ClassData other = (ClassData) obj;
+        return classPath.equals(other.getClassPath()) && this.className.equals(other.getClassName());
     }
 }

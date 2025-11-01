@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{
+    a4paper,
+    total={170mm,257mm},
+    left=20mm,
+    top=20mm,
+}
+\usepackage{graphicx}
+\usepackage{titling}
+\usepackage{fancyhdr}
+
+\fancypagestyle{plain}{%  the preset of fancyhdr 
+    \fancyhf{} % clear all header and footer fields
+    % \fancyfoot[R]{\includegraphics[width=2cm]{KULEUVEN_GENT_RGB_LOGO.png}}
+    \fancyfoot[L]{Jar explorR}
+    \fancyhead[L]{Programozás Alapjai 3. Nagy Házi feladat}
+    \fancyhead[R]{Ferencz Péter}
+}
+% \makeatletter
+
+\usepackage{lipsum}
+\usepackage{cmbright}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace{1cm}
+    {\Large \textsc{Programozás Alapjai 3\\(BMEVIIIAB00, 2025/26/1)\\  Nagy házi feladat}\par}
+    \vspace{1.5cm}
+    {\huge\bfseries Jar explorR:\\Java Archive fájl elemző és UML diagram generátor\par}
+    \vspace{2cm}
+    {\Large\itshape készítette: \par Ferencz Péter\par}
+    {\large(RFG7SN)}
+    \vfill
+    \includegraphics[totalheight=3cm]{res/VIK.png}\par
+    \vspace{1cm}
+    \includegraphics[totalheight=3cm]{res/BMEKicsi.png}\par
+    Budapesti Műszaki és Gazdaságtudományi Egyetem\par
+    Villamosmérnöki és Informatikai Kar\par
+    Mérnökinformatikus Bsc\par
+    {\large 2025 Október-November\par}
+\end{titlepage}
+
+
+\section*{A programról}
+A program célja egy Java Archive fájl vizuális ismertetése, az osztályok függvényeinek és metódusainak kigyűjtése, rendszerezése.
+UML diagramm autómatikus elkészítése.
+
+\section*{Bemenet}
+A program fő célja a JAR fájlok kezelése, ezért bemenetként egy ilyen fájlt vár. Ezt megkaphatja a \textit{\textendash input [file.jar]} kapcsoló
+paramétereként, melyet a grafikus felület megjelenése után meg is nyit, vagy a \textit{File \textgreater Open} menüpont alatt választhatja ki
+az operációs rendszer fájlböngészőjéből a megnyitni kívánt fájlt.
+
+\section*{Grafikus felület}
+A program 3 fő grafikai elemből áll: Fa nézet, Füles nézet, Eszköztár.\\
+A fa nézet célja a jar fájl fizikai felépítését szemléltetni, ahol minden egyes csomag (package) a fa egy új
+szintjén helyezkedik el. A fa levelei az osztály (.class) fájlok. Emellett a program megjeleníti az egyéb állományokat is,
+ezek megjelenítésére viszont képtelen (ezalól kivételt képez a META-INF/MANIFEST.MF).\\
+A füles nézet (tabbed layout) lehetővé teszi, hogy több osztályfájlt megnyissunk, ezek között könnyen váltogassunk.
+A fa nézetben az osztályfájlra kattintva megnyílik az adott osztályról információkat tartalmazó panel. A panel tartalmazza
+a fájlban fellelhető összes metódust, változót, azok hívási aláírását, és egyéb osztályadatokat.\\
+Az eszköztár teszi lehetővé a program egyedi funkióinak megvalósítását. Menüpontjai:\\
+File-Open: Egy grafikus fájlválasztót nyit meg, amin a felhasználó ki tudja választani az elemzendő jar fájlt.\\
+File-Exit: A program kilép\\
+UML-Show Diagram: megnyitja a füles nézetben az uml diagram szerkesztőt\\
+UML-Save: egy képet tud elmenteni a felhasználó az elkészített diagramjáról
+
+\section*{UML diagram}
+Az UML diagram panel mozgatható jobb egér gombbal és kicsinyíthető/nagyítható az egérgörgővel.
+Az egyes elemek (osztályok / interfészek) emellett szintén mozgathatók a bal egér gombbal.
+Az uml diagram az alábbi jelöléseket mutatja:\\
+Osztályok, interfészek és struktúrák külön jelölése\\
+Öröklés és implementálás jelölése\\
+Osztályok változóinak és metódusainak megjelenítése.
+
+\end{document}

@@ -11,50 +11,40 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.UIManager;
 
 import me.peterferencz.app.EventDispacher;
 import me.peterferencz.app.EventDispacher.Events;
+import me.peterferencz.app.Main;
 import me.peterferencz.ui.panels.ClassPanel;
 import me.peterferencz.ui.panels.ExplorerPanel;
 import me.peterferencz.ui.panels.InfoPanel;
 import me.peterferencz.ui.panels.ManifestPanel;
-import me.peterferencz.app.Main;
 
 public class Display {
     
     private JTabbedPane tabbedPane;
 
     public Display(){
-        if(Main.getGlobalContext().displayGTKTheme){
-            try {
-                // Try to set GTK Look and Feel (Linux)
-                UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-            } catch (Exception e) {
-                System.out.println("[Error] GTK L&F not available, using default.");
-                // fallback to system L&F
-                try {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                } catch (Exception ignored) {}
-            }
-        }
-
         JFrame window = new JFrame("Jar explorR");
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         window.setSize(400, 300);
-        Main.getGlobalContext().window = window;
-        Main.getGlobalContext().display = this;
+        Main.getGlobalContext().setWindow(window);
+        Main.getGlobalContext().setDisplay(this);
 
         Toolbar toolbar = new Toolbar();
         window.add(toolbar);
         window.setJMenuBar(toolbar);
 
         tabbedPane = new JTabbedPane();
-        ExplorerPanel explorerPanel = new ExplorerPanel();
+        InfoPanel infoPanel = new InfoPanel();
         if(Main.getGlobalContext().getJarFile() == null){
-            addTabToTabbedLayout("Get started", new InfoPanel());
+            openTab("Get started", infoPanel);
         }
-
+        EventDispacher.subscribe(Events.JARFILECHOOSEN, () -> {
+            closeTab(infoPanel);
+        });
+        
+        ExplorerPanel explorerPanel = new ExplorerPanel();
         JSplitPane splitPane = new JSplitPane(
             JSplitPane.HORIZONTAL_SPLIT,
             explorerPanel,
@@ -70,9 +60,10 @@ public class Display {
             Main.getGlobalContext().getSelectedClass().getClassName(),
             new ClassPanel(Main.getGlobalContext().getSelectedClass())
         ));
+        ManifestPanel manifestPanel = new ManifestPanel();
         EventDispacher.subscribe(Events.MANIFESTFILECHOOSEN, () -> openTab(
             "Manifest",
-            new ManifestPanel()
+            manifestPanel
         ));
 
         window.setLocationRelativeTo(null);
@@ -84,6 +75,11 @@ public class Display {
             addTabToTabbedLayout(name, panel);
         }
         tabbedPane.setSelectedComponent(panel);
+    }
+
+    public void closeTab(JPanel panel){
+        if(tabbedPane.indexOfComponent(panel) == -1){ return; }
+        tabbedPane.remove(panel);;
     }
 
     public void closeAllTabs(){

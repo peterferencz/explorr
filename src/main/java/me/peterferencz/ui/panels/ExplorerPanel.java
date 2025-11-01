@@ -12,6 +12,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import me.peterferencz.app.EventDispacher;
 import me.peterferencz.app.EventDispacher.Events;
+import me.peterferencz.app.jar.ClassData;
 import me.peterferencz.app.jar.JarFileHandler;
 import me.peterferencz.app.ExplorerNode;
 import me.peterferencz.app.Main;
@@ -50,43 +51,37 @@ public class ExplorerPanel extends JPanel {
 
         add(scrollPane, BorderLayout.CENTER);
 
-        EventDispacher.subscribe(Events.JARFILECHOOSEN, () -> onJarSelected());
-        onJarSelected();
+        EventDispacher.subscribe(Events.JARFILEFINISHEDLOADING, this::constructTree);
     }
 
-    private void onJarSelected(){
-        JarFile jar = Main.getGlobalContext().getJarFile();
+    private void constructTree(){
         ExplorerNode root = new ExplorerNode("", "", false);
-        
-        if(jar == null){
-            tree.setModel(new DefaultTreeModel(root));
-            return;
+    
+        for (ClassData classData : Main.getGlobalContext().getClasses()) {
+            String classPath = classData.getClassPath();
+            String[] parts = classPath.split("/");
+
+            ExplorerNode node = root;
+            for (int j = 0; j < parts.length; j++) {
+                String part = parts[j];
+                ExplorerNode child = null;
+                for (int i = 0; i < node.getChildCount(); i++) {
+                    ExplorerNode existing = (ExplorerNode) node.getChildAt(i);
+                    if (existing.getFileName().equals(part)) {
+                        child = existing;
+                        break;
+                    }
+                }
+                if (child == null) {
+                    boolean isFile = j == parts.length-1;
+                    String currentPath = node == root ? part : node.getClassPath() + "." + part;
+                    child = new ExplorerNode(part, currentPath, isFile);
+                    node.add(child);
+                }
+                node = child;
+            }
         }
 
-        jar.stream()
-            .filter(e -> !e.isDirectory())
-            .forEach(entry -> {
-                String[] parts = entry.getName().split("/");
-                ExplorerNode node = root;
-                for (int j = 0; j < parts.length; j++) {
-                    String part = parts[j];
-                    ExplorerNode child = null;
-                    for (int i = 0; i < node.getChildCount(); i++) {
-                        ExplorerNode existing = (ExplorerNode) node.getChildAt(i);
-                        if (existing.getFileName().equals(part)) {
-                            child = existing;
-                            break;
-                        }
-                    }
-                    if (child == null) {
-                        boolean isFile = j == parts.length-1;
-                        String classPath = node == root ? part : node.getClassPath()+"."+part;
-                        child = new ExplorerNode(part, classPath, isFile);
-                        node.add(child);
-                    }
-                    node = child;
-                }
-            });
         tree.setModel(new DefaultTreeModel(root));
     }
 }

@@ -10,10 +10,14 @@ public class EventDispacher {
         JARFILEFINISHEDLOADING,
         CLASSSELECTED,
         NONCLASSFILECHOOSEN,
-        MANIFESTFILECHOOSEN
+        MANIFESTFILECHOOSEN,
+        SAVEUMLDIAGRAM
     }
 
     private static HashMap<Events, ArrayList<Runnable>> callTable = new HashMap<>();
+    
+    // Hide public constructor
+    private EventDispacher(){}
 
     static {
         for(Events e : Events.values()){

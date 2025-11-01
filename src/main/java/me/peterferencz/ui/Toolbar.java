@@ -26,7 +26,7 @@ public class Toolbar extends JMenuBar{
 
         JMenu tb_view = new JMenu("View");
         JMenuItem tb_view_closeall = new JMenuItem("Close all tabs");
-        tb_view_closeall.addActionListener(e -> Main.getGlobalContext().display.closeAllTabs());
+        tb_view_closeall.addActionListener(e -> Main.getGlobalContext().getDisplay().closeAllTabs());
         tb_view.add(tb_view_closeall);
 
         JMenu tb_jar = new JMenu("Jar");
@@ -37,9 +37,9 @@ public class Toolbar extends JMenuBar{
         JMenu tb_uml = new JMenu("UML");
         JMenuItem tb_uml_open = new JMenuItem("Open diagram");
         UMLPanel umlPanel = new UMLPanel();
-        tb_uml_open.addActionListener(e -> Main.getGlobalContext().display.openTab("UML diagram", umlPanel));
+        tb_uml_open.addActionListener(e -> Main.getGlobalContext().getDisplay().openTab("UML diagram", umlPanel));
         JMenuItem tb_uml_image = new JMenuItem("Save image");
-        //TODO make exporting image work
+        tb_uml_image.addActionListener(e -> EventDispacher.dispatch(Events.SAVEUMLDIAGRAM));
         tb_uml.add(tb_uml_open);
         tb_uml.add(tb_uml_image);
 
@@ -47,7 +47,7 @@ public class Toolbar extends JMenuBar{
         JMenu tb_help = new JMenu("Help");
         JMenuItem tb_help_about = new JMenuItem("About");
         AboutPanel aboutPanel = new AboutPanel();
-        tb_help_about.addActionListener(e -> Main.getGlobalContext().display.openTab("About", aboutPanel));
+        tb_help_about.addActionListener(e -> Main.getGlobalContext().getDisplay().openTab("About", aboutPanel));
         tb_help.add(tb_help_about);
 
         add(tb_file);
