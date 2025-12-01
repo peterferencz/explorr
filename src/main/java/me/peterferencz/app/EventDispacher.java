@@ -1,20 +1,21 @@
 package me.peterferencz.app;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 
 public class EventDispacher {
     
-    public static enum Events{
+    public enum Events{
         JARFILECHOOSEN,
         JARFILEFINISHEDLOADING,
         CLASSSELECTED,
         NONCLASSFILECHOOSEN,
         MANIFESTFILECHOOSEN,
-        SAVEUMLDIAGRAM
+        SAVEUMLDIAGRAM,
+        EXPANDALLTREEVIEW
     }
 
-    private static HashMap<Events, ArrayList<Runnable>> callTable = new HashMap<>();
+    private static EnumMap<Events, ArrayList<Runnable>> callTable = new EnumMap<>(Events.class);
     
     // Hide public constructor
     private EventDispacher(){}
@@ -25,10 +26,17 @@ public class EventDispacher {
         }
     }
 
+    /** 
+     * @param e Event to subscribe to
+     * @param callback Function to call on event fire
+     */
     public static void subscribe(Events e, Runnable callback){
         callTable.get(e).add(callback);
     }
 
+    /** 
+     * @param e Event to fire
+     */
     public static void dispatch(Events e){
         for(Runnable callback : callTable.get(e)){
             callback.run();

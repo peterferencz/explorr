@@ -40,9 +40,7 @@ public class Display {
         if(Main.getGlobalContext().getJarFile() == null){
             openTab("Get started", infoPanel);
         }
-        EventDispacher.subscribe(Events.JARFILECHOOSEN, () -> {
-            closeTab(infoPanel);
-        });
+        EventDispacher.subscribe(Events.JARFILECHOOSEN, () -> closeTab(infoPanel));
         
         ExplorerPanel explorerPanel = new ExplorerPanel();
         JSplitPane splitPane = new JSplitPane(
@@ -55,7 +53,7 @@ public class Display {
         splitPane.setResizeWeight(0.1);
         window.add(splitPane);
 
-        EventDispacher.subscribe(Events.JARFILEFINISHEDLOADING, () -> window.repaint());
+        EventDispacher.subscribe(Events.JARFILEFINISHEDLOADING, window::repaint);
         EventDispacher.subscribe(Events.CLASSSELECTED, () -> openTab(
             Main.getGlobalContext().getSelectedClass().getClassName(),
             new ClassPanel(Main.getGlobalContext().getSelectedClass())
@@ -79,7 +77,7 @@ public class Display {
 
     public void closeTab(JPanel panel){
         if(tabbedPane.indexOfComponent(panel) == -1){ return; }
-        tabbedPane.remove(panel);;
+        tabbedPane.remove(panel);
     }
 
     public void closeAllTabs(){

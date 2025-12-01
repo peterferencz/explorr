@@ -1,6 +1,5 @@
 package me.peterferencz.app.uml;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Cursor;
@@ -10,19 +9,15 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collector;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
@@ -31,6 +26,7 @@ import javax.swing.JViewport;
 import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import me.peterferencz.app.EventDispacher;
 import me.peterferencz.app.EventDispacher.Events;
@@ -47,8 +43,8 @@ public class Diagram extends JPanel implements Scrollable{
     private static final double ZOOM_FACTOR = 1.1;
 
     private boolean panning = false;
-    private Point2D.Double lastPanPoint = null;
-    private DiagramElement selected = null;
+    private Point lastPanPoint = null;
+    private transient DiagramElement selected = null;
     private double selectOffsetX = 0;
     private double selectOffsetY = 0;
     private double scale = 1.0;
@@ -94,9 +90,10 @@ public class Diagram extends JPanel implements Scrollable{
     private void setupComposition() {
         for(DiagramElement element : elements){
             List<DiagramElement> connected = elements.stream()
+                .filter(e -> !e.equals(element))
                 .filter(e -> {
                     if(e.equals(element)) {return false; }
-                    String search = element.getClassData().getClassPath().substring(0, element.getClassData().getClassPath().length()-".class".length());
+                    String search = "L" + element.getClassData().getClassPathStripped() + ";";
                     
                     return e.getClassData().getFields()
                     .stream().anyMatch(f -> {
@@ -105,7 +102,6 @@ public class Diagram extends JPanel implements Scrollable{
                         return descMatch || signMatch;
                     });
                 })
-                .filter(e -> !e.equals(element))
                 .toList();
             for(DiagramElement el : connected){
                 LineConnectingClasses line = new LineConnectingClasses(element, el, Connection.COMPOSITION);
@@ -119,7 +115,7 @@ public class Diagram extends JPanel implements Scrollable{
     private void setupImplementation() {
         for(DiagramElement element : elements){
             if(!element.getClassData().isInterface()) { continue; }
-            String infc = element.getClassData().getClassPath().substring(0, element.getClassData().getClassPath().length() - ".class".length());
+            String infc = element.getClassData().getClassPathStripped();
 
             List<DiagramElement> implementElements = elements.stream()
                 .filter(e -> e.getClassData().getInterfaces().contains(infc))
@@ -170,7 +166,7 @@ public class Diagram extends JPanel implements Scrollable{
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                handleMouseReleased(e);
+                handleMouseReleased();
             }
         };
 
@@ -185,19 +181,17 @@ public class Diagram extends JPanel implements Scrollable{
 
         if (SwingUtilities.isRightMouseButton(e)) {
             startPanning(e, vp);
-            return;
         }
 
         if (SwingUtilities.isLeftMouseButton(e)) {
             selectObjectAt(e.getPoint());
-            return;
         }
     }
 
     private void startPanning(MouseEvent e, JViewport vp) {
         panning = true;
         Point pointInViewport = SwingUtilities.convertPoint(this, e.getPoint(), vp);
-        lastPanPoint = new Point2D.Double(pointInViewport.x, pointInViewport.y);
+        lastPanPoint = new Point(pointInViewport.x, pointInViewport.y);
         setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
         selected = null;
     }
@@ -206,13 +200,11 @@ public class Diagram extends JPanel implements Scrollable{
         Point2D.Double modelPoint = viewPointToModel(viewPoint);
         selected = null;
         
-        for(DiagramElement dc : elements){
-            if(!dc.contains(modelPoint.x, modelPoint.y)) { continue; }
-            selected = dc;
-            selectOffsetX = modelPoint.x - dc.getX();
-            selectOffsetY = modelPoint.y - dc.getY();
-            break;
-        }
+        DiagramElement clicked = elements.stream().filter(de -> de.contains(modelPoint.x, modelPoint.y)).findFirst().orElse(null);
+        if(clicked == null){ return; }
+        selected = clicked;
+        selectOffsetX = modelPoint.x - clicked.getX();
+        selectOffsetY = modelPoint.y - clicked.getY();
     }
 
     private void handleMouseDragged(MouseEvent e) {
@@ -228,39 +220,34 @@ public class Diagram extends JPanel implements Scrollable{
         if (vp == null || lastPanPoint == null) return;
 
         Point current = SwingUtilities.convertPoint(this, e.getPoint(), vp);
-        double dx = lastPanPoint.x - current.x;
-        double dy = lastPanPoint.y - current.y;
+        int dx = lastPanPoint.x - current.x;
+        int dy = lastPanPoint.y - current.y;
 
         Point viewPos = vp.getViewPosition();
-        int newX = (int) Math.round(viewPos.x + dx);
-        int newY = (int) Math.round(viewPos.y + dy);
+        int newX = viewPos.x + dx;
+        int newY = viewPos.y + dy;
 
         // Clamp to bounds
         newX = Math.max(0, Math.min(newX, getWidth() - vp.getWidth()));
         newY = Math.max(0, Math.min(newY, getHeight() - vp.getHeight()));
 
         vp.setViewPosition(new Point(newX, newY));
-        lastPanPoint = new Point2D.Double(current.x, current.y);
+        lastPanPoint = new Point(current.x, current.y);
     }
 
     private void dragSelectedObject(MouseEvent e) {
         Point2D.Double currentModel = viewPointToModel(e.getPoint());
     
-        double newX = currentModel.x - selectOffsetX;
-        double newY = currentModel.y - selectOffsetY;
+        int newX = (int) Math.round(currentModel.x - selectOffsetX);
+        int newY = (int) Math.round(currentModel.y - selectOffsetY);
         
-        // Snap to grid
-        newX = Math.round(newX / 10.0) * 10.0;
-        newY = Math.round(newY / 10.0) * 10.0;
 
-        //TODO make scaling work
-        Rectangle oldBounds = selected.getBoundsForRepaint();
+        Rectangle oldBounds = selected.getBoundsForRepaint(scale, true);
 
-        selected.setX((int)newX);
-        selected.setY((int)newY);
+        selected.setX(newX);
+        selected.setY(newY);
 
-        //TODO make scaling work
-        Rectangle newBounds = selected.getBoundsForRepaint();
+        Rectangle newBounds = selected.getBoundsForRepaint(scale, true);
 
         // Create a repaint area that covers both positions with padding
         int pad = (int) (5 * scale); // Scale the padding too
@@ -271,7 +258,7 @@ public class Diagram extends JPanel implements Scrollable{
 
     }
 
-    private void handleMouseReleased(MouseEvent e) {
+    private void handleMouseReleased() {
         if (panning) {
             panning = false;
             lastPanPoint = null;
@@ -289,17 +276,14 @@ public class Diagram extends JPanel implements Scrollable{
 
         double factor = e.getWheelRotation() < 0 ? ZOOM_FACTOR : 1.0 / ZOOM_FACTOR;
         double newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * factor));
-        
-        
-        // if (Math.abs(newScale - scale) < 1e-6) return;
 
         scale = newScale;
         updatePreferredSize();
         
         // Adjust viewport to keep mouse point stable
-        SwingUtilities.invokeLater(() -> {
-            adjustViewportAfterZoom(vp, mouseModelX, mouseModelY, e.getX(), e.getY());
-        });
+        SwingUtilities.invokeLater(() -> 
+            adjustViewportAfterZoom(vp, mouseModelX, mouseModelY, e.getX(), e.getY())
+        );
 
         revalidate();
     }
@@ -342,27 +326,30 @@ public class Diagram extends JPanel implements Scrollable{
         return new Point2D.Double(viewPoint.x / scale, viewPoint.y / scale);
     }
 
+
+    //FIXME USE Java.awt.Canvas
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
     
         Graphics2D g2 = (Graphics2D) g.create();
+        try{
+            // Enable anti-aliasing for smoother graphics
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+            
+            // Apply scaling
+            AffineTransform originalTransform = g2.getTransform();
+            g2.scale(scale, scale);
     
-        // Enable anti-aliasing for smoother graphics
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-
-        // Apply scaling
-        AffineTransform originalTransform = g2.getTransform();
-        g2.scale(scale, scale);
-
-        drawGrid(g2);
-        drawElements(g2);
-        drawClassConnections(g2);
-
-        g2.setTransform(originalTransform);
-        g2.dispose();
+            drawGrid(g2);
+            drawElements(g2);
+    
+            g2.setTransform(originalTransform);
+        }finally{
+            g2.dispose();
+        }
     }
 
     private void drawGrid(Graphics2D g2) {
@@ -370,12 +357,12 @@ public class Diagram extends JPanel implements Scrollable{
         if (clip == null) return;
         
         // Only draw grid in visible area
-        int startX = (int) (clip.x / 100) * 100;
-        int startY = (int) (clip.y / 100) * 100;
-        int endX = (int) (clip.x + clip.width + 100);
-        int endY = (int) (clip.y + clip.height + 100);
+        int startX = (clip.x / 100) * 100;
+        int startY = (clip.y / 100) * 100;
+        int endX = (clip.x + clip.width + 100);
+        int endY = (clip.y + clip.height + 100);
         
-        g2.setColor(new Color(240, 240, 240));
+        g2.setColor(UmlTheme.GridColor);
         
         // Draw grid
         for (int x = startX; x < endX; x += 100) {
@@ -393,30 +380,20 @@ public class Diagram extends JPanel implements Scrollable{
 
     private void drawElements(Graphics2D g2) {
         for (DiagramElement element : elements) {
-            element.Draw(g2);
+            element.draw(g2);
         }
 
         for(LineConnectingClasses line : connections){
-            line.Draw(g2);
+            line.draw(g2);
         }
-    }
-
-    private void drawClassConnections(Graphics2D g2){
-        // for(DiagramClass clazz : classes){
-        //     if(clazz.getParent() != null){
-        //         LineConnectingClasses line = new LineConnectingClasses(clazz, clazz.getParent(), Connection.INHERITANCE);
-        //         line.Draw(g2);
-        //     }
-        // }
     }
 
     public void saveToImage(){
         JFileChooser fc = new JFileChooser();
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fc.setFileFilter(new FileNameExtensionFilter("PNG Images", "png"));
         fc.setMultiSelectionEnabled(false);
-        if(fc.showOpenDialog(Main.getGlobalContext().getWindow()) == JFileChooser.APPROVE_OPTION){
-            fc.getSelectedFile();
-        }else{
+        if(fc.showOpenDialog(Main.getGlobalContext().getWindow()) != JFileChooser.APPROVE_OPTION){
             return;
         }
 
@@ -439,7 +416,6 @@ public class Diagram extends JPanel implements Scrollable{
             return parent.getSize();
         }
         return new Dimension(BASE_WIDTH, BASE_HEIGHT);
-        // return getPreferredSize();
     }
 
     @Override
@@ -453,6 +429,7 @@ public class Diagram extends JPanel implements Scrollable{
         return (orientation == SwingConstants.VERTICAL) ? visibleRect.height : visibleRect.width;
     }
 
+    // Allows viewport to be larget than the 
     @Override
     public boolean getScrollableTracksViewportWidth() {
         return false;
@@ -460,11 +437,6 @@ public class Diagram extends JPanel implements Scrollable{
 
     @Override
     public boolean getScrollableTracksViewportHeight() {
-        return false; // Allow vertical scrolling
-    }
-
-    @Override
-    public void setBounds(int x, int y, int width, int height) {
-        super.setBounds(x, y, width, height);
+        return false;
     }
 }

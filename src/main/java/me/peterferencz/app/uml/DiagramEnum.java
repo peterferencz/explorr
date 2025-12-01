@@ -7,6 +7,8 @@ import java.awt.Graphics2D;
 import java.util.Collections;
 import java.util.List;
 
+import org.objectweb.asm.Opcodes;
+
 import me.peterferencz.app.jar.ClassData;
 import me.peterferencz.app.jar.Field;
 import me.peterferencz.app.jar.Prettier;
@@ -20,8 +22,8 @@ public class DiagramEnum extends DiagramElement {
     }
 
     @Override
-    public void Draw(Graphics2D g2) {
-        if(!updatedDimensions){
+    public void draw(Graphics2D g2) {
+        if(!updatedDimensions) {
             calcualteDimensions(g2);
             updatedDimensions = true;
         }
@@ -30,13 +32,14 @@ public class DiagramEnum extends DiagramElement {
 
         Font originalFont = g2.getFont();
         g2.setColor(Color.BLACK);
-        g2.setFont(originalFont.deriveFont(Font.PLAIN, originalFont.getSize() - 1));
+        g2.setFont(originalFont.deriveFont(Font.PLAIN, originalFont.getSize() - 1f));
         FontMetrics fm = g2.getFontMetrics();
         int lineHeight = fm.getHeight();
 
         for (Field field : classData.getFields()) {
+            if((field.getAccess() & Opcodes.ACC_ENUM) == 0) continue;
+            
             String enumValue = field.getName();
-            if(enumValue.equals("$VALUES") || enumValue.equals("ENUM$VALUES")) { continue; }
             g2.drawString(enumValue, x + UmlTheme.Padding, currentY + lineHeight);
             currentY += lineHeight + UmlTheme.PaddingField;
         }
@@ -51,15 +54,16 @@ public class DiagramEnum extends DiagramElement {
         int titleWidth = metrics.stringWidth(classData.getClassName());
         int stringHeight = metrics.getHeight();
 
+        List<Field> enumValues = classData.getFields().stream().filter(f -> (f.getAccess() & Opcodes.ACC_ENUM) != 0).toList();
         // + 1 for access char (+-~#)
-        int maxFieldWidth = classData.getFields().stream().map(Prettier::getUML).mapToInt(metrics::stringWidth).max().orElse(100) + 1;
+        int maxFieldWidth = enumValues.stream().map(Prettier::getUML).mapToInt(metrics::stringWidth).max().orElse(100) + 1;
 
         this.w = 2*UmlTheme.Padding + Collections.max(List.of(titleWidth, maxFieldWidth, UmlTheme.MinBoxWidth));
         h = UmlTheme.Padding +
             stringHeight +
             UmlTheme.PaddingElementname +
             UmlTheme.PaddingSeparator +
-            (stringHeight + UmlTheme.PaddingField) * (classData.getFields().size() -1) + // -1 for $VALUES
+            (stringHeight + UmlTheme.PaddingField) * (enumValues.size()) +
             UmlTheme.Padding;
     }
     

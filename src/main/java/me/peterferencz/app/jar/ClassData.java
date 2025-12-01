@@ -14,6 +14,12 @@ public class ClassData {
     private ArrayList<Method> methods;
     
     public String getClassPath() { return classPath; }
+    public String getClassPathStripped() {
+        if(classPath.endsWith(".class")){
+            return classPath.substring(0, classPath.length() - ".class".length());
+        }
+        return classPath;
+    }
     public String getClassName() { return className; }
     public ArrayList<String> getInterfaces() { return interfaces; }
     public String getSuperClass() { return superClass; }

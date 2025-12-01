@@ -1,7 +1,6 @@
 package me.peterferencz.ui.panels;
 
 import java.awt.BorderLayout;
-import java.util.jar.JarFile;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -12,10 +11,10 @@ import javax.swing.tree.TreeSelectionModel;
 
 import me.peterferencz.app.EventDispacher;
 import me.peterferencz.app.EventDispacher.Events;
-import me.peterferencz.app.jar.ClassData;
-import me.peterferencz.app.jar.JarFileHandler;
 import me.peterferencz.app.ExplorerNode;
 import me.peterferencz.app.Main;
+import me.peterferencz.app.jar.ClassData;
+import me.peterferencz.app.jar.JarFileHandler;
 
 public class ExplorerPanel extends JPanel {
 
@@ -52,6 +51,13 @@ public class ExplorerPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
         EventDispacher.subscribe(Events.JARFILEFINISHEDLOADING, this::constructTree);
+        EventDispacher.subscribe(Events.EXPANDALLTREEVIEW, this::expandAll);
+    }
+
+    private void expandAll(){
+        for (int i = 0; i < tree.getRowCount(); i++) {
+            tree.expandRow(i);
+        }
     }
 
     private void constructTree(){

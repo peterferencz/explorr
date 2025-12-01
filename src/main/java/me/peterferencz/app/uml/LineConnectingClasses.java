@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LineConnectingClasses{
-    public static enum Connection {
+    public enum Connection {
         NONE,
         INHERITANCE,
         IMPLEMENTATION,
@@ -36,19 +36,23 @@ public class LineConnectingClasses{
         return from.getBounds().union(to.getBounds());
     }
 
-    public void Draw(Graphics2D g2){
+    public Rectangle getBoundsForRepaint(double scale){
+        return from.getBoundsForRepaint(scale, false).union(to.getBoundsForRepaint(scale, false));
+    }
+
+    /** Draw the line connecting the two components
+     * @param g2 Graphics
+     */
+    public void draw(Graphics2D g2){
         Rectangle2D childRect = from.getBounds();
         Rectangle2D parentRect = to.getBounds();
 
         switch (connection) {
-            case INHERITANCE:
-                g2.setColor(Color.BLACK);
-                g2.setStroke(new BasicStroke(1f));
-                break;
             case IMPLEMENTATION:
                 g2.setColor(UmlTheme.InterfaceAccent);
                 g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10, new float[]{10, 5}, 0f));
                 break;
+            case INHERITANCE:
             case COMPOSITION:
                 g2.setColor(Color.BLACK);
                 g2.setStroke(new BasicStroke(1f));
@@ -65,7 +69,8 @@ public class LineConnectingClasses{
         // Determine preferred connection sides
         boolean verticalConnection = Math.abs(parentCenterY - childCenterY) > Math.abs(parentCenterX - childCenterX);
 
-        Point2D start, end;
+        Point2D start;
+        Point2D end;
 
         if (verticalConnection) {
             // Connect vertically
@@ -112,12 +117,20 @@ public class LineConnectingClasses{
             g2.draw(new Line2D.Double(p1, p2));
         }
 
-        // Draw arrowhead at the parent side
+        // Draw line head at the parent side
         if(connection == Connection.INHERITANCE || connection == Connection.IMPLEMENTATION){
-            drawArrowHead(g2, path.get(path.size() - 2), end, 8);
+            drawArrowHead(g2, path.get(path.size() - 2), end, 20);
+        }else if(connection == Connection.COMPOSITION){
+            drawDiamondHead(g2, path.get(path.size() - 2), end, 15);
         }
     }
 
+    /** Draws an arrow pointing to @param to
+     * @param g2 Graphics
+     * @param from From
+     * @param to To
+     * @param size Line thickness
+     */
     private void drawArrowHead(Graphics2D g2, Point2D from, Point2D to, double size) {
         double angle = Math.atan2(to.getY() - from.getY(), to.getX() - from.getX());
         double sin = Math.sin(angle);
@@ -146,6 +159,53 @@ public class LineConnectingClasses{
         g2.setColor(prevColor);
         g2.drawPolygon(xPoints, yPoints, 3);
 
+        g2.setStroke(prevStroke);
+    }
+
+    /** Draws an arrow with a diamond head pointing to @param to
+     * @param g2 Graphics
+     * @param from From
+     * @param to To
+     * @param size Line thickness
+     */
+    private void drawDiamondHead(Graphics2D g2, Point2D from, Point2D to, double size){
+        double angle = Math.atan2(to.getY() - from.getY(), to.getX() - from.getX());
+        double sin = Math.sin(angle);
+        double cos = Math.cos(angle);
+
+        // Diamond points (4 points)
+        int[] xPoints = new int[4];
+        int[] yPoints = new int[4];
+
+        // Tip of diamond (pointing to the target)
+        xPoints[0] = (int) to.getX();
+        yPoints[0] = (int) to.getY();
+
+        // Back-left
+        xPoints[1] = (int) (to.getX() - size * cos + size / 2 * sin);
+        yPoints[1] = (int) (to.getY() - size * sin - size / 2 * cos);
+
+        // Back-tip (furthest from the line)
+        xPoints[2] = (int) (to.getX() - 2 * size * cos);
+        yPoints[2] = (int) (to.getY() - 2 * size * sin);
+
+        // Back-right
+        xPoints[3] = (int) (to.getX() - size * cos - size / 2 * sin);
+        yPoints[3] = (int) (to.getY() - size * sin + size / 2 * cos);
+
+        // Save previous color and stroke
+        Stroke prevStroke = g2.getStroke();
+
+        // Draw filled diamond
+        g2.setColor(Color.WHITE);
+        g2.fillPolygon(xPoints, yPoints, 4);
+
+        // Draw diamond outline
+        g2.setStroke(new BasicStroke(1.2f));
+        g2.setColor(Color.BLACK);
+        g2.drawPolygon(xPoints, yPoints, 4);
+
+        // Restore previous stroke
         g2.setStroke(prevStroke);
     }
 }

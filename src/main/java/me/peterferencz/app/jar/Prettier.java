@@ -35,27 +35,6 @@ public class Prettier {
         }
     }
 
-    // public static String prettyDescriptor(Field field){
-    //     String descriptor = Type.getType(field.getDescriptor()).getClassName();
-    //     return descriptor.substring(descriptor.lastIndexOf(".") + 1);
-    // }
-
-    // public static String prettySignature(Field field){
-    //     if(field.getSignature() == null) return "";
-    //     String descriptor = field.getSignature();
-
-    //     return descriptor
-    //         .replaceAll("Ljava/lang/", "")
-    //         .replaceAll("Ljava/util/", "")
-    //         .replaceAll(";", "")
-    //         .replaceAll("/", ".");
-    // }
-
-
-
-    
-
-
     public static String prettyDescriptor(String descriptor) {
         int start = descriptor.indexOf('(');
         int end = descriptor.indexOf(')');
@@ -71,6 +50,8 @@ public class Prettier {
     }
 
     public static String prettySignature(String signature){
+        if(signature == null){return "";}
+        
         int start = signature.indexOf('(');
         int end = signature.indexOf(')');
         if(start == -1 || end == -1){
@@ -156,10 +137,7 @@ public class Prettier {
             default:
                 return new ParsedType("?", start + 1);
         }
-    }
-
-
-    
+    }    
 
     public static String prettyAccess(int access) {
         List<String> modifiers = new ArrayList<>();

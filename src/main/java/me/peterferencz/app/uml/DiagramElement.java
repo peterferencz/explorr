@@ -12,11 +12,14 @@ import java.util.List;
 import me.peterferencz.app.jar.ClassData;
 
 public abstract class DiagramElement {
-    protected int x, y, w, h;
+    protected int x;
+    protected int y;
+    protected int w;
+    protected int h;
     protected ClassData classData;
     protected List<LineConnectingClasses> connections;
 
-    public DiagramElement(ClassData classData){
+    protected DiagramElement(ClassData classData){
         x = 0;
         y = 0;
         w = 100;
@@ -50,18 +53,17 @@ public abstract class DiagramElement {
         return new Rectangle(x, y, w, h);
     }
 
-    public Rectangle getBoundsForRepaint(){
-        //FIXME get scale
-        double scale = 1;
-
+    public Rectangle getBoundsForRepaint(double scale, boolean checkConnected){
         int scaledX = (int) Math.floor(x * scale) - 5;
         int scaledY = (int) Math.floor(y * scale) - 5;
         int scaledW = (int) Math.ceil(w * scale)  + 5;
         int scaledH = (int) Math.ceil(h * scale)  + 5;
         Rectangle rect = new Rectangle(scaledX, scaledY, scaledW, scaledH);
 
-        for(LineConnectingClasses line : connections){
-            rect = rect.union(line.getBounds());
+        if(checkConnected){
+            for(LineConnectingClasses line : connections){
+                rect = rect.union(line.getBoundsForRepaint(scale));
+            }
         }
         return rect;
     }
@@ -70,7 +72,7 @@ public abstract class DiagramElement {
         return px >= x && px <= x + w && py >= y && py <= y + h;
     }
 
-    public abstract void Draw(Graphics2D g2);
+    public abstract void draw(Graphics2D g2);
 
     protected int drawClasslikeElementBox(Graphics2D g2, Color background, Color accent){
         g2.setColor(Color.WHITE);

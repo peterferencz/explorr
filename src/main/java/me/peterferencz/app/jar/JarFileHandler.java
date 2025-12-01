@@ -1,7 +1,6 @@
 package me.peterferencz.app.jar;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -25,6 +24,8 @@ public class JarFileHandler {
     private static Preferences prefs = Preferences.userNodeForPackage(JarFileHandler.class);
     private static File lastDirectory = new File(prefs.get("lastDir", System.getProperty("user.home")));
     
+    private static final String CLASSENDING = ".class";
+
     //Hide public constructor
     private JarFileHandler() {}
 
@@ -56,7 +57,7 @@ public class JarFileHandler {
         Main.getGlobalContext().getJarFile()
             .stream()
             .filter(e -> !e.isDirectory())
-            .filter(e -> e.getName().endsWith(".class"))
+            .filter(e -> e.getName().endsWith(CLASSENDING))
             .forEach(e -> Main.getGlobalContext().getClasses().add(
                 readClassFile(e.getName())
             ));
@@ -65,9 +66,9 @@ public class JarFileHandler {
     }
 
     public static ClassData readClassFile(String classPath){
-        classPath = classPath.substring(0, classPath.length()-".class".length());
+        classPath = classPath.substring(0, classPath.length()-CLASSENDING.length());
         classPath = classPath.replace('.', '/');
-        classPath += ".class";
+        classPath += CLASSENDING;
         
         JarFile jar = Main.getGlobalContext().getJarFile();
         ClassData classData = new ClassData();
@@ -76,8 +77,8 @@ public class JarFileHandler {
             JarEntry entry = jar.getJarEntry(classPath);
             
             String entryName = entry.getName();
-            if (entryName.endsWith(".class")) {
-                entryName = entryName.substring(0, entryName.length() - ".class".length());
+            if (entryName.endsWith(CLASSENDING)) {
+                entryName = entryName.substring(0, entryName.length() - CLASSENDING.length());
             }
             classData.setClassName(entryName.substring(entryName.lastIndexOf('/') + 1));
             classData.setClassPath(classPath);
@@ -109,11 +110,9 @@ public class JarFileHandler {
                 }
             }, 0);
             fis.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        } 
 
         return classData;
     }

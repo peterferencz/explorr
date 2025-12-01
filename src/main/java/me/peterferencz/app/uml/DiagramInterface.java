@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,7 +22,7 @@ public class DiagramInterface extends DiagramElement{
     }
 
     @Override
-    public void Draw(Graphics2D g2) {
+    public void draw(Graphics2D g2) {
         if(!updatedDimensions){
             calculateDimensions(g2);
             updatedDimensions = true;
