@@ -15,6 +15,7 @@
 \usetikzlibrary{trees}
 \usetikzlibrary{shapes}
 \usetikzlibrary{positioning}
+\usetikzlibrary{positioning}
 
 \fancypagestyle{plain}{%  the preset of fancyhdr 
     \fancyhf{} % clear all header and footer fields
@@ -84,36 +85,72 @@ Osztályok változóinak és metódusainak megjelenítése.
 \section*{Programozói specifikáció}
 A program felépítése:
 \subsection*{Toolbar}
+A felső lécen a felhasználó az alábbi menüpontokból választhat \\
 \begin{tikzpicture}[
+  node style/.style={
+    rectangle, draw, rounded corners,
+    align=center, font=\small,
+    minimum width=28mm, minimum height=8mm
+  },
   edge from parent/.style={draw, -latex},
-  every node/.style={rectangle, draw, rounded corners, align=center, font=\small, minimum width=25mm},
-  level distance=15mm,
-  grow=east,
-  top level/.style={sibling distance=0.18\textwidth}, % top-level nodes evenly spaced
-  second level/.style={sibling distance=20mm}          % child nodes spacing
 ]
 
-\node {Toolbar}
-    child [top level] { node {File}
-        child [second level] { node {Open} }
-        child [second level] { node {Exit} }
-    }
-    child [top level] { node {View}
-        child [second level] { node {Close all tabs} }
-        child [second level] { node {Expand Treeview} }
-    }
-    child [top level] { node {Jar}
-        child [second level] { node {Open Manifest} }
-    }
-    child [top level] { node {UML}
-        child [second level] { node {Open diagram} }
-        child [second level] { node {Save image} }
-    }
-    child [top level] { node {Help}
-        child [second level] { node {About} }
-    };
+\node[node style] (root) at (0,0) {Toolbar};
+
+\node[node style] (file) at (-6,-2) {File};
+\node[node style] (view) at (-3,-2) {View};
+\node[node style] (jar)  at (0,-2) {Jar};
+\node[node style] (uml)  at (3,-2) {UML};
+\node[node style] (help) at (6,-2) {Help};
+
+\node[node style] (file-open) at (-6,-4) {Open};
+\node[node style] (file-exit) at (-6,-5.5) {Exit};
+
+\node[node style] (view-close) at (-3,-4) {Close all tabs};
+\node[node style] (view-expand) at (-3,-5.5) {Expand Treeview};
+
+\node[node style] (jar-manifest) at (0,-4) {Open Manifest};
+
+\node[node style] (uml-open) at (3,-4) {Open diagram};
+\node[node style] (uml-save) at (3,-5.5) {Save image};
+
+\node[node style] (help-about) at (6,-4) {About};
+
+\draw[->] (root) -- (file);
+\draw[->] (root) -- (view);
+\draw[->] (root) -- (jar);
+\draw[->] (root) -- (uml);
+\draw[->] (root) -- (help);
+
+\draw[->] (file) -- (file-open);
+\draw[->] (file) -- (file-exit);
+
+\draw[->] (view) -- (view-close);
+\draw[->] (view) -- (view-expand);
+
+\draw[->] (jar) -- (jar-manifest);
+
+\draw[->] (uml) -- (uml-open);
+\draw[->] (uml) -- (uml-save);
+
+\draw[->] (help) -- (help-about);
 
 \end{tikzpicture}
+
+
+\subsection*{UML Diagram}
+\subsubsection*{A program által generált UML diagram}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{res/nhfuml.png}
+\end{figure}
+\subsubsection*{IntelliJ által generált UML diagram}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=.7\textwidth]{res/uml.png}
+\end{figure}
+
+
 
 
 \end{document}

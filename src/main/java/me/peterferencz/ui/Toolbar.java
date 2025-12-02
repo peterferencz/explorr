@@ -20,7 +20,7 @@ public class Toolbar extends JMenuBar{
         JMenu miFile = new JMenu("File");
         JMenuItem miFileOpen = new JMenuItem("Open");
         JMenuItem miFileExit = new JMenuItem("Exit");
-        miFileExit.addActionListener(e -> JarFileHandler.openFileDialog());
+        miFileOpen.addActionListener(e -> JarFileHandler.openFileDialog());
         miFileExit.addActionListener(e -> System.exit(0));
         miFile.add(miFileOpen);
         miFile.add(miFileExit);
