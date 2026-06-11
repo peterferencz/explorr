@@ -1,35 +1,33 @@
 # Java Archive Explorer & UML Visualizer
+> Made for Budapest University of Technology and Economics | Faculty of Electrical Engineering and Informatics | BSc Computer Science and Engineering | Basics of Programming 3 (BMEVIIIAB00)
 
-`explorr` is a lightweight command-line tool for inspecting Java archives (`.jar` files) and generating UML-style representations of their internal structure.
+`Jar explorR` is a lightweight Java tool designed for exploring .jar files,
+inspecting class contents, and generating UML diagrams.
+
+## Gallery
+
+![User interface of application](./resources/interface.png)
+![View of the generated UML diagram](./resources/umldiagram.png)
 
 ## Features
 
 - Inspect JAR file contents
 - Discover classes and interfaces
 - Extract inheritance hierarchies
-- Generate UML class diagrams
+- Generate and export UML class diagrams
 - Lightweight CLI interface
 
-### Prerequisites
-- Java 11+
-- Maven 3+
+## Documentation ['HU']
+[./docs/specification.pdf](./docs/specification.pdf)
 
 ### Build
-
+Built using the maven build system
 ```bash
 mvn clean package
 ```
 
 ## Usage
 
-Analyze a JAR file:
-
 ```bash
-java -jar explorr.jar my-library.jar
-```
-
-Generate UML output:
-
-```bash
-java -jar explorr.jar my-library.jar --uml
+java -jar explorr.jar archive.jar
 ```
