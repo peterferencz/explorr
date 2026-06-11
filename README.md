@@ -20,7 +20,7 @@ inspecting class contents, and generating UML diagrams.
 ## Documentation ['HU']
 [./docs/specification.pdf](./docs/specification.pdf)
 
-### Build
+## Build
 Built using the maven build system
 ```bash
 mvn clean package
